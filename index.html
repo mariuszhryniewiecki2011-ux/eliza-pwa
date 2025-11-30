@@ -146,6 +146,13 @@
             background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
             box-shadow: 0 4px 15px rgba(149, 165, 166, 0.4);
         }
+
+        /* Cartesia open button (small variant) */
+        .btn-cartesia {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.25);
+            min-width: 180px;
+        }
         
         .settings {
             margin-top: 20px;
@@ -195,6 +202,17 @@
             40% { content: '..'; }
             60%, 100% { content: '...'; }
         }
+
+        /* Cartesia container */
+        #cartesia {
+            height: 320px;
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+            background: #fff;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -224,8 +242,13 @@
         <button class="btn btn-clear" id="clearBtn">
             🗑️ Clear Chat
         </button>
+        <button class="btn btn-cartesia" id="openCartesiaBtn" disabled>
+            🗺️ Open Cartesia
+        </button>
     </div>
     
+    <div id="cartesia"></div>
+
     <div class="settings">
         <div class="setting-item">
             <label for="languageSelect">Language:</label>
@@ -242,6 +265,19 @@
         </div>
     </div>
     
+    <!-- Cartesia SDK (CDN) -->
+    <script src="https://cdn.cartesia.ai/cartesia.min.js"></script>
+
+    <!-- Small Cartesia wrapper that exposes window.initCartesia -->
+    <script src="cartesia-init.js"></script>
+
+    <!-- Optional runtime placeholder for API key (replace at deploy time; do NOT commit real key) -->
+    <!-- Example usage: set environment or hosting platform to inject an actual key -->
+    <script>
+      // window.__CARTESIA_KEY__ = 'CARTESIA_API_KEY_PLACEHOLDER';
+      // For security, set this at deploy time in your hosting/CI, or use server-side injection.
+    </script>
+
     <script src="app.js"></script>
 </body>
 </html>
