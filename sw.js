@@ -1,74 +1,72 @@
-// Service Worker for Eliza PWA
-const CACHE_NAME = 'eliza-v1';
-const urlsToCache = [
+const CACHE_NAME = 'eliza-pwa-v1';
+const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/app.js',
-  '/manifest.json',
+  '/cartesia-init.js',
   '/icon-192.png',
-  '/icon-512.png'
+  '/manifest.json'
 ];
 
-// Install event - cache files
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_URLS))
   );
 });
 
-// Fetch event - serve from cache, fall back to network
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        
-        // Clone the request
-        const fetchRequest = event.request.clone();
-        
-        return fetch(fetchRequest).then((response) => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+    )).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  // Always bypass caching for known external SDK assets (Cartesia CDN)
+  if (url.hostname.includes('cartesia.ai') || url.hostname.includes('cdn.cartesia.ai')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // For navigations and page requests: serve cache-first with network fallback
+  if (request.mode === 'navigate' || (request.method === 'GET' && request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
+    event.respondWith(
+      caches.match('/index.html').then(resp => resp || fetch(request).then(networkResp => {
+        return networkResp;
+      })).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // Same-origin, GET requests: cache-first, then network and update cache
+  if (url.origin === location.origin && request.method === 'GET') {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+        return fetch(request).then(networkResp => {
+          // Avoid caching opaque responses (cross-origin) and POSTs
+          if (networkResp && networkResp.status === 200) {
+            caches.open(CACHE_NAME).then(cache => cache.put(request, networkResp.clone()));
           }
-          
-          // Clone the response
-          const responseToCache = response.clone();
-          
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          
-          return response;
+          return networkResp;
         }).catch(() => {
-          // Network failed, return offline page if available
+          // fallback for images or other assets: try to return something from cache
           return caches.match('/index.html');
         });
       })
-  );
-});
+    );
+    return;
+  }
 
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+  // Cross-origin requests (non-Cartesia): network-first, fallback to cache
+  event.respondWith(
+    fetch(request).then(networkResp => {
+      return networkResp;
+    }).catch(() => caches.match(request))
   );
 });
