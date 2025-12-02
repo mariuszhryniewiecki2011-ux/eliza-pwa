@@ -2,282 +2,232 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#6B46C1">
-    <meta name="description" content="Eliza - Your AI Companion">
-    
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    
-    <title>Eliza 💎</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartesia Voice Demo</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
             padding: 20px;
-            touch-action: manipulation;
+            background: #f5f5f5;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+        h1 {
+            color: #333;
+            margin-top: 0;
         }
-        
-        .status {
-            background: rgba(255,255,255,0.2);
-            padding: 15px;
-            border-radius: 15px;
-            text-align: center;
+        .form-group {
             margin-bottom: 20px;
-            font-size: 1.1rem;
         }
-        
-        .status.listening {
-            background: rgba(46, 204, 113, 0.3);
-            animation: pulse 1.5s infinite;
-        }
-        
-        .status.speaking {
-            background: rgba(52, 152, 219, 0.3);
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        
-        .chat-container {
-            flex: 1;
-            background: rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            overflow-y: auto;
-            max-height: 50vh;
-        }
-        
-        .message {
-            margin-bottom: 15px;
-            padding: 15px;
-            border-radius: 15px;
-            max-width: 85%;
-        }
-        
-        .message.user {
-            background: rgba(52, 152, 219, 0.3);
-            margin-left: auto;
-            text-align: right;
-        }
-        
-        .message.eliza {
-            background: rgba(155, 89, 182, 0.3);
-            margin-right: auto;
-        }
-        
-        .message-text {
-            font-size: 1.1rem;
-            line-height: 1.4;
-        }
-        
-        .message-time {
-            font-size: 0.8rem;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            flex: 1;
-            min-width: 140px;
-            padding: 25px;
-            border: none;
-            border-radius: 20px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .btn:active {
-            transform: scale(0.95);
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .btn-talk {
-            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
-        }
-        
-        .btn-stop {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
-        }
-        
-        .btn-clear {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-            box-shadow: 0 4px 15px rgba(149, 165, 166, 0.4);
-        }
-
-        /* Cartesia open button (small variant) */
-        .btn-cartesia {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.25);
-            min-width: 180px;
-        }
-        
-        .settings {
-            margin-top: 20px;
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 15px;
-        }
-        
-        .setting-item {
-            margin-bottom: 10px;
-        }
-        
-        .setting-item label {
+        label {
             display: block;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
         }
-        
-        .setting-item select {
+        select {
             width: 100%;
             padding: 10px;
-            border-radius: 10px;
-            border: none;
-            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
         }
-        
-        .error-message {
-            background: rgba(231, 76, 60, 0.3);
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            display: none;
+        select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
         }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .loading::after {
-            content: '...';
-            animation: dots 1.5s infinite;
-        }
-        
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
-        }
-
-        /* Cartesia container */
-        #cartesia {
-            height: 320px;
+        #cartesia-status {
+            padding: 12px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
             margin-top: 20px;
-            border-radius: 12px;
-            overflow: hidden;
-            display: none;
-            background: #fff;
-            color: #000;
+            font-size: 14px;
+            color: #1976d2;
+        }
+        #cartesia-status.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+            color: #c62828;
+        }
+        #cartesia-status.success {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+            color: #2e7d32;
+        }
+        #cartesia-container {
+            margin-top: 20px;
+            min-height: 50px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>💎 Eliza 💎</h1>
-        <p>Your AI Companion</p>
-    </div>
-    
-    <div class="error-message" id="errorMessage"></div>
-    
-    <div class="status" id="status">Ready to talk</div>
-    
-    <div class="chat-container" id="chatContainer">
-        <div class="message eliza">
-            <div class="message-text">Hello! I'm Eliza. Press "Talk to Eliza" and speak to me! 💙</div>
-            <div class="message-time">Ready</div>
-        </div>
-    </div>
-    
-    <div class="controls">
-        <button class="btn btn-talk" id="talkBtn">
-            🎤 Talk to Eliza
-        </button>
-        <button class="btn btn-stop" id="stopBtn" disabled>
-            ⏹️ Stop
-        </button>
-        <button class="btn btn-clear" id="clearBtn">
-            🗑️ Clear Chat
-        </button>
-        <button class="btn btn-cartesia" id="openCartesiaBtn" disabled>
-            🗺️ Open Cartesia
-        </button>
-    </div>
-    
-    <div id="cartesia"></div>
-
-    <div class="settings">
-        <div class="setting-item">
-            <label for="languageSelect">Language:</label>
-            <select id="languageSelect">
-                <option value="en-US">English</option>
-                <option value="id-ID">Bahasa Indonesia</option>
+    <div class="container">
+        <h1>Cartesia Voice Demo</h1>
+        
+        <div id="cartesia-container"></div>
+        
+        <div class="form-group">
+            <label for="cartesia-language">Language:</label>
+            <select id="cartesia-language" disabled>
+                <option value="">Loading...</option>
             </select>
         </div>
-        <div class="setting-item">
-            <label for="voiceSelect">Voice:</label>
-            <select id="voiceSelect">
-                <!-- Will be populated by JavaScript -->
+        
+        <div class="form-group">
+            <label for="cartesia-voice">Voice:</label>
+            <select id="cartesia-voice" disabled>
+                <option value="">Select language first</option>
             </select>
         </div>
+        
+        <div id="cartesia-status">Status: Initializing...</div>
     </div>
-    
-    <!-- Cartesia SDK (CDN) -->
-    <script src="https://cdn.cartesia.ai/cartesia.min.js"></script>
 
-    <!-- Small Cartesia wrapper that exposes window.initCartesia -->
     <script src="cartesia-init.js"></script>
-
-    <!-- Optional runtime placeholder for API key (replace at deploy time; do NOT commit real key) -->
-    <!-- Example usage: set environment or hosting platform to inject an actual key -->
     <script>
-      // window.__CARTESIA_KEY__ = 'CARTESIA_API_KEY_PLACEHOLDER';
-      // For security, set this at deploy time in your hosting/CI, or use server-side injection.
-    </script>
+(async function () {
+  var statusEl = document.getElementById('cartesia-status');
+  var langSelect = document.getElementById('cartesia-language');
+  var voiceSelect = document.getElementById('cartesia-voice');
 
-    <script src="app.js"></script>
+  function setStatus(msg, type = 'info') {
+    statusEl.textContent = 'Status: ' + msg;
+    statusEl.className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+  }
+
+  if (typeof window.initCartesia !== 'function') {
+    setStatus('Init helper not loaded. Please ensure cartesia-init.js is available.', 'error');
+    return;
+  }
+
+  try {
+    setStatus('Initializing Cartesia...');
+    var instance = await window.initCartesia('cartesia-container', null);
+    setStatus('Cartesia initialized', 'success');
+
+    setStatus('Loading languages...');
+    var langs = await instance.listLanguages();
+    langSelect.innerHTML = '';
+    
+    if (!langs || langs.length === 0) {
+      var opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No languages available';
+      langSelect.appendChild(opt);
+      langSelect.disabled = true;
+      setStatus('No languages available from Cartesia SDK or backend', 'error');
+      return;
+    }
+    
+    langs.forEach(function (l) {
+      var opt = document.createElement('option');
+      opt.value = l.id;
+      opt.textContent = l.name || l.id;
+      langSelect.appendChild(opt);
+    });
+    
+    langSelect.disabled = false;
+    langSelect.selectedIndex = 0;
+    setStatus('Languages loaded (' + langs.length + ')', 'success');
+
+    var initialLang = langSelect.value;
+    if (initialLang) await loadVoicesForLanguage(initialLang);
+
+    langSelect.addEventListener('change', async function (ev) {
+      await loadVoicesForLanguage(ev.target.value);
+    });
+
+    async function loadVoicesForLanguage(languageId) {
+      if (!languageId) {
+        voiceSelect.innerHTML = '<option value="">Select language first</option>';
+        voiceSelect.disabled = true;
+        return;
+      }
+      
+      voiceSelect.disabled = true;
+      voiceSelect.innerHTML = '<option>Loading voices…</option>';
+      setStatus('Loading voices for ' + languageId + '...');
+      
+      try {
+        var voices = await instance.listVoices(languageId);
+        voiceSelect.innerHTML = '';
+        
+        if (!voices || voices.length === 0) {
+          var opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'No voices available';
+          voiceSelect.appendChild(opt);
+          voiceSelect.disabled = true;
+          setStatus('No voices available for ' + languageId, 'error');
+          return;
+        }
+        
+        voices.forEach(function (v) {
+          var opt = document.createElement('option');
+          opt.value = v.id;
+          opt.textContent = v.name || v.id;
+          voiceSelect.appendChild(opt);
+        });
+        
+        voiceSelect.disabled = false;
+        voiceSelect.selectedIndex = 0;
+        setStatus('Voices loaded (' + voices.length + ') for ' + languageId, 'success');
+      } catch (err) {
+        voiceSelect.innerHTML = '<option value="">Failed to load voices</option>';
+        voiceSelect.disabled = true;
+        setStatus('Failed to load voices: ' + (err && err.message ? err.message : err), 'error');
+      }
+    }
+
+    // Play a sample when voice changes by requesting TTS audio and playing it
+    voiceSelect.addEventListener('change', async function () {
+      var voiceId = voiceSelect.value;
+      var lang = langSelect.value;
+      if (!voiceId) return;
+      
+      setStatus('Synthesizing sample...');
+      try {
+        var buffer = await instance.synthesize({
+          text: 'Hello, this is a voice sample.',
+          language: lang,
+          voice: voiceId,
+          model_id: 'sonic-2',
+          output_format: {
+            container: 'wav',
+            sample_rate: 44100,
+            encoding: 'pcm_f32le'
+          },
+        });
+        
+        // buffer is an ArrayBuffer — create a blob and play
+        var blob = new Blob([buffer], { type: 'audio/wav' });
+        var url = URL.createObjectURL(blob);
+        var audio = new Audio(url);
+        
+        audio.play().then(function() {
+          setStatus('Playing sample for ' + voiceId, 'success');
+        }).catch(function (e) {
+          console.warn('Audio play failed', e);
+          setStatus('Audio playback failed: ' + (e.message || e), 'error');
+        });
+      } catch (e) {
+        setStatus('Synthesis failed: ' + (e && e.message ? e.message : e), 'error');
+      }
+    });
+
+  } catch (err) {
+    setStatus('Failed to initialize Cartesia: ' + (err && err.message ? err.message : err), 'error');
+    console.error('Initialization error:', err);
+  }
+})();
+    </script>
 </body>
 </html>
