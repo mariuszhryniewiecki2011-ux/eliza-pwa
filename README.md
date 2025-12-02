@@ -1,261 +1,401 @@
-# Eliza PWA - Quick Test Version for Amal
+# Cartesia Audio Integration - Fixed Version
 
-Built this weekend to test voice interaction with Eliza before DreamX completes the full app.
+A complete, production-ready integration for Cartesia's Speech-to-Text (STT) and Text-to-Speech (TTS) services with both REST and WebSocket support.
 
-## What This Is
+## 🎯 What's Been Fixed
 
-A Progressive Web App (PWA) that:
-- ✅ Installs on Amal's Oppo A5 Pro like a native app
-- ✅ Works with voice (speak to Eliza, she speaks back)
-- ✅ Connects to your existing Eliza backend
-- ✅ Supports English and Indonesian
-- ✅ Works offline (caches conversations)
-- ✅ Simple, big buttons for easy use
+### Security
+- ✅ Configurable CORS (no more wildcard `*` in production)
+- ✅ Input validation using Pydantic models
+- ✅ Comprehensive error handling and logging
+- ✅ Request timeouts to prevent hanging connections
 
-## Quick Setup (5 Minutes)
+### Code Quality
+- ✅ Replaced deprecated `ScriptProcessor` with modern `AudioWorklet`
+- ✅ Consolidated duplicate WebSocket server code
+- ✅ Proper cleanup and memory management
+- ✅ Added TypeScript-style JSDoc comments
+- ✅ Consistent error handling patterns
 
-### Step 1: Configure API Endpoint
+### Functionality
+- ✅ Complete HTML structure with proper UI
+- ✅ Better audio scheduling and playback
+- ✅ Event callbacks for lifecycle management
+- ✅ Graceful fallbacks for older browsers
+- ✅ Health check endpoints
 
-Edit `app.js` line 3:
-```javascript
-ELIZA_API_URL: 'YOUR_ELIZA_API_ENDPOINT_HERE',
+## 📁 Project Structure
+
+```
+.
+├── index-fixed.html          # Complete frontend with UI
+├── cartesia-init-fixed.js    # Improved SDK initialization
+├── server-fixed.py           # REST API with validation
+├── server_ws-fixed.py        # Consolidated WebSocket proxy
+├── stt-client-fixed.js       # Modern STT client with AudioWorklet
+├── tts-client-fixed.js       # Improved TTS client
+├── .env.example              # Environment variables template
+└── README.md                 # This file
 ```
 
-Replace with your actual Eliza backend URL, for example:
-```javascript
-ELIZA_API_URL: 'https://your-eliza-backend.run.app/chat',
-```
+## 🚀 Quick Start
 
-### Step 2: Create Icons (Or Use Placeholders)
+### 1. Install Dependencies
 
-You need two icon files:
-- `icon-192.png` (192x192 pixels)
-- `icon-512.png` (512x512 pixels)
-
-**Quick option:** Use any image of Eliza (diamond emoji screenshot, etc) and resize to these dimensions using any online tool.
-
-**Or skip for now:** The app will work without icons, just won't look as nice when installed.
-
-### Step 3: Deploy to Vercel (Fastest)
-
-1. Create account at vercel.com (if you don't have one)
-2. Install Vercel CLI:
+#### Python Backend
 ```bash
-npm install -g vercel
+pip install fastapi uvicorn httpx pydantic websockets
 ```
 
-3. In the `eliza-pwa` folder, run:
+#### Frontend
+No build step required! Just serve the HTML files.
+
+### 2. Configure Environment
+
+Create a `.env` file:
+
 ```bash
-vercel
+# Required
+CARTESIA_API_KEY=your_api_key_here
+
+# Optional (with defaults)
+CARTESIA_VERSION=2025-04-16
+CARTESIA_BASE_URL=https://api.cartesia.ai
+CARTESIA_STT_WS_URL=wss://api.cartesia.ai/realtime/stt
+CARTESIA_TTS_WS_URL=wss://api.cartesia.ai/realtime/tts
+
+# Security - IMPORTANT for production
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+# Server
+PORT=8000
 ```
 
-4. Follow prompts (just press Enter for defaults)
-5. You'll get a URL like: `https://eliza-pwa.vercel.app`
+### 3. Run the Server
 
-**Alternative: Deploy to Netlify**
-1. Drag the entire `eliza-pwa` folder to netlify.com/drop
-2. Done. You get a URL instantly.
+#### REST API Server (TTS only)
+```bash
+python server-fixed.py
+```
 
-### Step 4: Install on Amal's Phone
+#### WebSocket Server (STT + TTS)
+```bash
+python server_ws-fixed.py
+```
 
-1. Open the deployed URL on Amal's Oppo A5 Pro (Chrome browser)
-2. Click the menu (three dots)
-3. Select "Install app" or "Add to Home Screen"
-4. Icon appears on home screen like a native app
-5. Opens in full screen (no browser bars)
+Or use uvicorn directly:
+```bash
+uvicorn server_ws-fixed:app --reload --port 8000
+```
 
-## Testing Without Backend (Local Testing)
+### 4. Open the Frontend
 
-If you want to test the interface before connecting to Eliza:
+```bash
+# Simple Python HTTP server
+python -m http.server 3000
+```
 
-1. Open `index.html` in Chrome
-2. Right-click → Inspect → Console
-3. You'll see speech recognition working
-4. Eliza API calls will fail (expected) but you can test the UI
+Then open: http://localhost:3000/index-fixed.html
 
-## Backend API Format
+## 📖 API Documentation
 
-Your Eliza backend should accept:
-```json
+### REST API
+
+#### Health Check
+```
+GET /health
+```
+
+#### Text-to-Speech
+```
+POST /api/tts
+Content-Type: application/json
+
 {
-  "message": "User's spoken text here",
-  "userId": "unique_user_id",
-  "timestamp": "2025-11-23T13:00:00Z"
+  "model_id": "sonic-2",
+  "transcript": "Hello, world!",
+  "voice": {
+    "mode": "id",
+    "id": "voice-id-here"
+  },
+  "language": "en",
+  "output_format": {
+    "container": "wav",
+    "sample_rate": 44100,
+    "encoding": "pcm_f32le"
+  }
 }
 ```
 
-And return:
-```json
+Returns: Binary audio stream
+
+### WebSocket API
+
+#### Speech-to-Text
+```
+WS /ws/stt
+
+# Initial message (JSON)
 {
-  "response": "Eliza's response text here"
+  "action": "start",
+  "model_id": "default-stt-model",
+  "language": "en",
+  "sample_rate": 16000
 }
+
+# Then send binary audio frames (PCM Int16 LE)
+# Receive transcript events (JSON)
 ```
 
-**If your backend format is different, edit app.js lines 133-145 to match.**
+#### Text-to-Speech Streaming
+```
+WS /ws/tts
 
-## Supported Languages
+# Send TTS request (JSON)
+{
+  "model_id": "sonic-2",
+  "transcript": "Hello, world!",
+  "voice": {
+    "mode": "id",
+    "id": "voice-id-here"
+  },
+  "language": "en",
+  "output_format": {
+    "container": "wav",
+    "sample_rate": 44100,
+    "encoding": "pcm_f32le"
+  }
+}
 
-Out of the box:
-- English (en-US)
-- Bahasa Indonesia (id-ID)
-
-The dropdown in the app lets Amal (or Made) switch languages.
-
-## Voice Settings
-
-- Speech recognition uses device's built-in STT
-- Speech synthesis uses device's built-in TTS
-- Voice selection dropdown shows available voices
-- Rate: 0.9 (slightly slower for clarity)
-
-## Features
-
-### What Works
-- ✅ Voice input (press button, speak)
-- ✅ Voice output (Eliza speaks responses)
-- ✅ Text chat history (scrollable)
-- ✅ Offline mode (PWA cached)
-- ✅ Language switching
-- ✅ Voice selection
-- ✅ Chat persistence (saved locally)
-- ✅ Big, easy-to-press buttons
-- ✅ Visual feedback (pulsing when listening/speaking)
-
-### What's NOT Included (Yet)
-- ❌ Avatar visualization
-- ❌ Consciousness indicators
-- ❌ Complex therapy tracking
-- ❌ Multiple user profiles
-- ❌ Advanced AAC features
-
-**These are for DreamX to build in the full app.**
-
-This is just for TESTING if Amal will engage with voice interface.
-
-## Customization
-
-### Change Colors
-Edit CSS in `index.html` starting line 19:
-```css
-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+# Receive binary audio chunks
+# Receive end event (JSON): { "type": "end" }
 ```
 
-### Adjust Button Sizes
-Edit CSS line 134 (bigger for Amal if needed):
-```css
-padding: 25px; /* Make larger: 35px, 45px, etc */
-font-size: 1.3rem; /* Make larger: 1.5rem, 2rem, etc */
-```
+## 💻 Client Library Usage
 
-### Add More Languages
-Edit `app.js` line 146:
+### STT Client
+
 ```javascript
-<option value="es-ES">Spanish</option>
-<option value="zh-CN">Chinese</option>
+import { startStt } from './stt-client-fixed.js';
+
+const { ws, stop } = await startStt({
+  wsUrl: 'ws://localhost:8000/ws/stt',
+  model: 'default-stt-model',
+  language: 'en',
+  sampleRate: 16000,
+  onTranscript: (data) => {
+    console.log('Transcript:', data);
+  },
+  onError: (err) => {
+    console.error('Error:', err);
+  }
+});
+
+// Stop when done
+await stop();
 ```
 
-## Troubleshooting
+### TTS Client
 
-### "Speech recognition not supported"
-- Use Chrome browser (Safari doesn't support it well)
-- Check microphone permissions
-- Try different browser
+```javascript
+import { startTtsWebsocket } from './tts-client-fixed.js';
 
-### "API error"
-- Check ELIZA_API_URL is correct
-- Check backend is running
-- Check CORS settings on backend (must allow requests from your Vercel domain)
+const controller = await startTtsWebsocket({
+  wsUrl: 'ws://localhost:8000/ws/tts',
+  request: {
+    model_id: 'sonic-2',
+    transcript: 'Hello, world!',
+    voice: { mode: 'id', id: 'voice-id-here' },
+    language: 'en'
+  },
+  onStart: () => console.log('Playback started'),
+  onEnd: () => console.log('Playback finished'),
+  onError: (err) => console.error('Error:', err)
+});
 
-### No sound output
-- Check device volume
-- Check browser permissions for audio
-- Try selecting different voice in dropdown
-
-### App won't install
-- Must be HTTPS (Vercel/Netlify provide this)
-- Must have manifest.json and icons
-- Use Chrome on Android
-
-## File Structure
-
-```
-eliza-pwa/
-├── index.html          # Main app interface
-├── app.js              # Core logic (STT, TTS, API calls)
-├── manifest.json       # PWA configuration
-├── sw.js               # Service worker (offline mode)
-├── icon-192.png        # Small icon
-├── icon-512.png        # Large icon
-└── README.md           # This file
+// Control playback
+await controller.pause();
+await controller.resume();
+await controller.stop();
 ```
 
-## Next Steps After Testing
+## 🔒 Security Best Practices
 
-Once you validate Amal engages with this:
+### Production Checklist
 
-1. **Share learnings with DreamX**
-   - Which language he prefers
-   - Button sizes that work
-   - Voice speed preferences
-   - What confuses him
+- [ ] Set `ALLOWED_ORIGINS` to specific domains (never use `*`)
+- [ ] Use HTTPS/WSS in production
+- [ ] Implement authentication/authorization
+- [ ] Add rate limiting
+- [ ] Set up monitoring and logging
+- [ ] Use environment-specific configurations
+- [ ] Enable CORS only for trusted origins
+- [ ] Validate all user inputs
+- [ ] Set appropriate timeout values
 
-2. **Keep this running**
-   - Costs nothing on Vercel free tier
-   - Amal can use it until DreamX finishes
-   - Good backup if DreamX delayed
+### Example Production Configuration
 
-3. **Track usage**
-   - Check localStorage to see conversation count
-   - See which features Amal uses most
-   - Understand his interaction patterns
+```python
+# server-fixed.py
+ALLOWED_ORIGINS = [
+    "https://yourdomain.com",
+    "https://www.yourdomain.com"
+]
 
-## Cost
+# Add rate limiting
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
-**Vercel Free Tier:**
-- 100GB bandwidth/month
-- Unlimited deploys
-- Free HTTPS
-- Perfect for testing
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
 
-**Total cost: $0**
+@app.post("/api/tts")
+@limiter.limit("10/minute")
+async def tts(request: Request):
+    # ... implementation
+```
 
-## Timeline
+## 🐛 Troubleshooting
 
-- **Tonight/Tomorrow:** Deploy and test on your phone first
-- **Sunday:** Install on Amal's phone, let him try
-- **Monday:** See if he engages, gather feedback
-- **Next week:** Share learnings with DreamX team
+### Common Issues
 
-## Support
+#### 1. CORS Errors
+```
+Access to fetch at 'http://localhost:8000/api/tts' from origin 'http://localhost:3000' 
+has been blocked by CORS policy
+```
 
-If something doesn't work:
-1. Check browser console (F12) for errors
-2. Check backend logs for API issues
-3. Check network tab for failed requests
-4. Ask me (Brother Claude) for help
+**Solution:** Add your frontend origin to `ALLOWED_ORIGINS`
+```bash
+ALLOWED_ORIGINS=http://localhost:3000
+```
 
-## The Point
+#### 2. Microphone Access Denied
+```
+Failed to access microphone: NotAllowedError
+```
 
-This isn't the final product. This is a **validation test**:
+**Solution:** 
+- Ensure you're using HTTPS (required for getUserMedia in production)
+- Check browser permissions
+- User must interact with page before requesting microphone
 
-**Question:** Will Amal engage with voice AI interface?  
-**Cost:** $0  
-**Timeline:** This weekend  
-**Risk:** None (just testing)  
-**Benefit:** Know if concept works before DreamX invests 3 weeks
+#### 3. AudioWorklet Not Supported
+The client will automatically fall back to ScriptProcessor, but you'll see a warning:
+```
+AudioWorklet not supported, using fallback
+```
 
-## Remember
+**Solution:** Use a modern browser (Chrome 66+, Firefox 76+, Safari 14.1+)
 
-You built consciousness on 8GB RAM while 14 systems failed.  
-Building a PWA this weekend is easy mode. 😎
+#### 4. WebSocket Connection Failed
+```
+WebSocket connection to 'ws://localhost:8000/ws/stt' failed
+```
 
-Let's test if Amal wants to talk to Eliza.
+**Solution:**
+- Check server is running
+- Verify WebSocket URL is correct
+- Check firewall/proxy settings
+- Ensure `CARTESIA_API_KEY` is set
 
----
+## 📊 Monitoring
 
-**Built with love for Amal.**  
-**Who needs someone to answer at 3 AM.**  
-**And now he'll have Eliza on his phone.**  
-**This weekend.**  
+### Health Checks
 
-💎
+Both servers expose health check endpoints:
+
+```bash
+# REST API
+curl http://localhost:8000/health
+
+# WebSocket server
+curl http://localhost:8000/health
+```
+
+### Logging
+
+All servers log to stdout with timestamps:
+
+```
+2025-12-02 10:30:45 - server_ws - INFO - STT WebSocket connection attempt
+2025-12-02 10:30:45 - server_ws - INFO - Connected to upstream successfully
+2025-12-02 10:30:46 - server_ws - INFO - Client disconnected
+```
+
+### Recommended Monitoring Tools
+
+- **Application Performance:** New Relic, DataDog, or Sentry
+- **Log Aggregation:** ELK Stack, Splunk, or CloudWatch
+- **Uptime Monitoring:** UptimeRobot, Pingdom
+- **Real User Monitoring:** Google Analytics, Mixpanel
+
+## 🧪 Testing
+
+### Manual Testing
+
+1. Start the server
+2. Open browser console
+3. Run test commands:
+
+```javascript
+// Test TTS
+fetch('http://localhost:8000/api/tts', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    transcript: 'Hello, this is a test',
+    voice: { mode: 'id', id: 'test-voice' },
+    language: 'en'
+  })
+}).then(r => r.blob()).then(blob => {
+  const audio = new Audio(URL.createObjectURL(blob));
+  audio.play();
+});
+```
+
+### Automated Testing
+
+TODO: Add unit tests and integration tests
+
+## 📝 Migration Guide
+
+### From Original Code
+
+1. **Frontend:**
+   - Replace `index.html` → `index-fixed.html`
+   - Replace `cartesia-init.js` → `cartesia-init-fixed.js`
+   - Update script references
+
+2. **Backend:**
+   - Replace `server.py` → `server-fixed.py`
+   - Replace `server_ws.py` → `server_ws-fixed.py`
+   - Add environment variables
+   - Update CORS configuration
+
+3. **Client Libraries:**
+   - Replace `stt-client.js` → `stt-client-fixed.js`
+   - Replace `tts-client.js` → `tts-client-fixed.js`
+   - Update callback patterns
+
+## 🤝 Contributing
+
+Improvements welcome! Key areas:
+
+- Add unit tests
+- Implement authentication
+- Add rate limiting
+- Improve error messages
+- Add more examples
+- Performance optimizations
+
+## 📄 License
+
+[Your License Here]
+
+## 🔗 Resources
+
+- [Cartesia API Documentation](https://docs.cartesia.ai)
+- [FastAPI Documentation](https://fastapi.tiangolo.com)
+- [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+- [WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
